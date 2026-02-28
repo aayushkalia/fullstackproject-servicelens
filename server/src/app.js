@@ -5,7 +5,12 @@ const errorHandler = require("./middleware/errorHandler");
 const app = express();
 
 // --- Core Middleware ---
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "*",
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 // --- Health Check ---
