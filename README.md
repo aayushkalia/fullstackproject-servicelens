@@ -28,7 +28,7 @@ A full-stack service cost comparison engine that lets users compare providers ac
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/YOUR_USERNAME/fullstackproject-servicelens.git
+git clone https://github.com/aayushkalia/fullstackproject-servicelens.git
 cd fullstackproject-servicelens
 
 # 2. Setup backend
