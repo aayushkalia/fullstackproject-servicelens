@@ -21,6 +21,9 @@ export default function AdminDashboard() {
     address: "",
     phone: "",
   });
+  const [services, setServices] = useState([
+    { service_name: "", price: "", unit: "per visit" },
+  ]);
   const [formMsg, setFormMsg] = useState("");
   const [formErr, setFormErr] = useState("");
 
@@ -66,11 +69,24 @@ export default function AdminDashboard() {
     setFormMsg("");
     setFormErr("");
     try {
-      await api.post("/admin/providers", {
+      const res = await api.post("/admin/providers", {
         ...form,
         category_id: Number(form.category_id),
       });
-      setFormMsg("Provider created (pending approval)");
+      
+      const newProviderId = res.data.data.id;
+      
+      // Add services
+      const validServices = services.filter(s => s.service_name && s.price);
+      if (validServices.length > 0) {
+        await Promise.all(
+          validServices.map(s => 
+            api.post("/admin/services", { ...s, provider_id: newProviderId })
+          )
+        );
+      }
+
+      setFormMsg("Provider and services created (pending approval)");
       setForm({
         category_id: "",
         name: "",
@@ -79,6 +95,7 @@ export default function AdminDashboard() {
         address: "",
         phone: "",
       });
+      setServices([{ service_name: "", price: "", unit: "per visit" }]);
       fetchData();
     } catch (err) {
       setFormErr(err.response?.data?.error || "Failed to create provider");
@@ -228,6 +245,75 @@ export default function AdminDashboard() {
                   />
                 </div>
               </div>
+
+              {/* Pricing Section */}
+              <div style={{ marginTop: "16px", marginBottom: "16px", padding: "16px", border: "1px solid var(--border)", borderRadius: "8px" }}>
+                <h3 style={{ marginBottom: "12px", fontSize: "1.1rem" }}>Services & Pricing</h3>
+                {services.map((svc, index) => (
+                  <div key={index} className="form-row" style={{ alignItems: "flex-end", marginBottom: "8px" }}>
+                    <div className="form-group" style={{ flex: 2 }}>
+                      <label>Service Name</label>
+                      <input
+                        placeholder="e.g. Basic Consultation"
+                        value={svc.service_name}
+                        onChange={(e) => {
+                          const newServices = [...services];
+                          newServices[index].service_name = e.target.value;
+                          setServices(newServices);
+                        }}
+                        required
+                      />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label>Price (₹)</label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 500"
+                        value={svc.price}
+                        onChange={(e) => {
+                          const newServices = [...services];
+                          newServices[index].price = e.target.value;
+                          setServices(newServices);
+                        }}
+                        required
+                      />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label>Unit</label>
+                      <input
+                        placeholder="e.g. per visit"
+                        value={svc.unit}
+                        onChange={(e) => {
+                          const newServices = [...services];
+                          newServices[index].unit = e.target.value;
+                          setServices(newServices);
+                        }}
+                      />
+                    </div>
+                    {services.length > 1 && (
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm"
+                        style={{ marginBottom: "8px", marginLeft: "8px" }}
+                        onClick={() => {
+                          const newServices = services.filter((_, i) => i !== index);
+                          setServices(newServices);
+                        }}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setServices([...services, { service_name: "", price: "", unit: "per visit" }])}
+                >
+                  + Add Another Service
+                </button>
+              </div>
+
               <button className="btn btn-primary" type="submit">
                 Add Provider
               </button>
